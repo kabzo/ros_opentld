@@ -6,13 +6,13 @@
 	<arg name="model_export_file" default="/home/tld_models/sample"/>
 	<arg name="cascade_path" default=
 		"$(env ROS_ROOT)/../OpenCV/haarcascades/haarcascade_frontalface_alt.xml"/>
-	<arg name="image_topic" default="im_acq"/>
+	<arg name="image_topic" default="usb_cam/image_raw"/>
 
 	<!-- Nodes -->
     <node name="ros_tld_tracker_node" pkg="tld_tracker" type="tld_tracker_node"
 	    output="screen">
         <!-- remap of topics -->
-        <remap from="image" to="$(arg image_topic)"/>
+
         <remap from="bounding_box" to="tld_gui_bb"/>
         <remap from="cmds" to="tld_gui_cmds"/>
 
@@ -29,6 +29,7 @@
         <param name="width" value="200" type="int"/>
         <param name="height" value="200" type="int"/>
         <param name="correctBB" value="false" type="bool"/>
+        <param name="image" value="$(arg image_topic)" type="string"/>
     </node>
 </launch>
 

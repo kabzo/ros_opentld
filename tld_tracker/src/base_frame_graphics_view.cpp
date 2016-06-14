@@ -34,6 +34,7 @@ BaseFrameGraphicsView::BaseFrameGraphicsView(QWidget * parent) : QGraphicsView(p
 
 	m_item_pixmap = m_scene->addPixmap(QPixmap("../../res/opentld.png"));
 	m_item_rect = new QGraphicsRectItem();
+    m_item_line = new QGraphicsLineItem();
 	m_item_rect->setFlag(QGraphicsItem::ItemIsMovable);
 	m_item_rect->setFlag(QGraphicsItem::ItemIsSelectable);
 
@@ -46,6 +47,11 @@ BaseFrameGraphicsView::BaseFrameGraphicsView(QWidget * parent) : QGraphicsView(p
 	m_item_rect->setBrush(*m_brush);
 
 	m_scene->addItem(m_item_rect);
+
+    m_item_line->setPen(*m_pen);
+    m_scene->addItem(m_item_line);
+    m_item_line->setLine(m_scene->height()/2,0,m_scene->height(),m_scene->width());
+    qDebug() << m_scene->height();
 
 	this->setCursor(Qt::CrossCursor);
 
@@ -60,6 +66,8 @@ BaseFrameGraphicsView::BaseFrameGraphicsView(QGraphicsScene * scene, QWidget * p
 
 	m_item_pixmap = m_scene->addPixmap(QPixmap("../../res/opentld.png"));
 	m_item_rect = new QGraphicsRectItem(0,0,0,0);
+    m_item_line = new QGraphicsLineItem(0,0,0,0);
+
 	m_item_rect->setFlag(QGraphicsItem::ItemIsMovable);
 	m_item_rect->setFlag(QGraphicsItem::ItemIsSelectable);
 
@@ -72,6 +80,11 @@ BaseFrameGraphicsView::BaseFrameGraphicsView(QGraphicsScene * scene, QWidget * p
 	m_item_rect->setBrush(*m_brush);
 
 	m_scene->addItem(m_item_rect);
+
+    m_item_line->setPen(*m_pen);
+    m_scene->addItem(m_item_line);
+    m_item_line->setLine(m_scene->height()/2,0,m_scene->height(),m_scene->width());
+    qDebug() << m_scene->height();
 
 	correct_bb = false;
 	drag = false;
@@ -117,7 +130,12 @@ void BaseFrameGraphicsView::tracked_objet_changed(const QRectF & rect)
     {
       this->correct_bb = true;
       this->setCursor(Qt::ArrowCursor);
+
+
     } 
+//    double x1,y1,x2,y2;
+//    rect.getCoords(&x1,&y1,&x2,&y2);
+//    this->m_item_line->setLine(x1,y1,x2,y2);
   }
   //The tracker node sent a bad bouding box
   else
@@ -129,8 +147,10 @@ void BaseFrameGraphicsView::tracked_objet_changed(const QRectF & rect)
     }
   }
 
-  this->m_item_rect->setRect(rect);        
+  this->m_item_rect->setRect(rect);
 }
+
+
 
 void BaseFrameGraphicsView::resizeEvent(QResizeEvent * event)
 {

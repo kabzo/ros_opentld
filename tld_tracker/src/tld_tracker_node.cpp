@@ -26,7 +26,8 @@ void termination_handler(int signum);
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "ros_tld_tracker_node");
-	ros::AsyncSpinner spinner(1);
+    ros::AsyncSpinner
+            spinner(1);
 	struct sigaction action;
 	Main * main_node = new Main();
 

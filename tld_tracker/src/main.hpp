@@ -53,111 +53,126 @@
 #include <std_msgs/Char.h>
 #include <std_msgs/Float32.h>
 #include <string>
+#include <geometry_msgs/Point.h>
+#include <image_transport/image_transport.h>
+
 
 class Main
 {
-	public:
-		Main()
-		{
-			tld = new tld::TLD();
-			state = INIT;
+public:
+  Main():it_(n)
+  {
+    tld = new tld::TLD();
+    state = INIT;
 
-			ros::NodeHandle np("~");
-			np.param("showOutput", showOutput, true);
-			np.param("loadModel", loadModel, false);
-			np.param("autoFaceDetection", autoFaceDetection, false);
-			np.param("exportModelAfterRun", exportModelAfterRun, false);
-			np.param("modelImportFile", modelImportFile, std::string("model"));
-			np.param("modelExportFile", modelExportFile, std::string("model"));
-			np.param("cascadePath", face_cascade_path, 
-					std::string("haarcascade_frontalface_alt.xml"));
+    ros::NodeHandle np("~");
+    np.param("showOutput", showOutput, true);
+    np.param("loadModel", loadModel, false);
+    np.param("autoFaceDetection", autoFaceDetection, false);
+    np.param("exportModelAfterRun", exportModelAfterRun, false);
+    np.param("modelImportFile", modelImportFile, std::string("model"));
+    np.param("modelExportFile", modelExportFile, std::string("model"));
+    np.param("cascadePath", face_cascade_path,
+             std::string("haarcascade_frontalface_alt.xml"));
 
-			np.param("x", target_bb.x, 100);
-			np.param("y", target_bb.y, 100);
-			np.param("width", target_bb.width, 100);
-			np.param("height", target_bb.height, 100);
-			np.param("correctBB", correctBB, false);
+    np.param("x", target_bb.x, 100);
+    np.param("y", target_bb.y, 100);
+    np.param("width", target_bb.width, 100);
+    np.param("height", target_bb.height, 100);
+    np.param("correctBB", correctBB, false);
 
-			pub1 = n.advertise<tld_msgs::BoundingBox>(
-                    "tld_tracked_object", 1000, true);
-			pub2 = n.advertise<std_msgs::Float32>(
-                    "tld_fps", 1000, true);
-			sub1 = n.subscribe(
-                    "image", 1000, &Main::imageReceivedCB, this);
-			sub2 = n.subscribe(
-                    "bounding_box", 1000, &Main::targetReceivedCB, this);
-			sub3 = n.subscribe(
-                    "cmds", 1000, &Main::cmdReceivedCB, this);
+    np.param("image", image_sub, std::string("image"));
+    std::cout<<image_sub<<std::endl;
+    pub1 = n.advertise<tld_msgs::BoundingBox>(
+          "tld_tracked_object", 1000, true);
+    pub2 = n.advertise<std_msgs::Float32>(
+          "tld_fps", 1000, true);
+    sub1 = it_.subscribe(
+          image_sub, 1000, &Main::imageReceivedCB, this);
+    sub2 = n.subscribe(
+          "bounding_box", 1000, &Main::targetReceivedCB, this);
+    sub3 = n.subscribe(
+          "cmds", 1000, &Main::cmdReceivedCB, this);
 
-			semaphore.lock();
-		}
+    std::cout<<sub1.getTopic()<<std::endl;
 
-		~Main()
-		{
-			delete tld;
-		}
+    pub_center_camera = n.advertise<geometry_msgs::Point>("tld_center_camera",1000,true);
 
-		void process();
+    semaphore.lock();
+  }
 
-	private:
-		tld::TLD * tld; 
-		bool showOutput;
-		bool exportModelAfterRun;
-		bool loadModel;
-		bool autoFaceDetection;
-		std::string modelImportFile;
-		std::string modelExportFile;
+  ~Main()
+  {
+    delete tld;
+  }
 
-		enum
-		{
-			INIT,
-			TRACKER_INIT,
-			TRACKING,
-			STOPPED
-		} state;
+  void process();
 
-		bool correctBB;
-		cv::Rect target_bb;
-		cv::Mat target_image;
+private:
+  tld::TLD * tld;
+  bool showOutput;
+  bool exportModelAfterRun;
+  bool loadModel;
+  bool autoFaceDetection;
+  std::string modelImportFile;
+  std::string modelExportFile;
 
-		std_msgs::Header img_header;
-		cv::Mat img;
-		cv_bridge::CvImagePtr img_buffer_ptr;
-		cv::Mat gray;
-		boost::interprocess::interprocess_mutex mutex;
-		boost::interprocess::interprocess_mutex semaphore;
-		ros::NodeHandle n;
-		ros::Publisher pub1;
-		ros::Publisher pub2;
-		ros::Subscriber sub1;
-		ros::Subscriber sub2;
-		ros::Subscriber sub3;
+  enum
+  {
+    INIT,
+    TRACKER_INIT,
+    TRACKING,
+    STOPPED
+  } state;
+  std::string image_sub;
+  bool correctBB;
+  cv::Rect target_bb;
+  cv::Mat target_image;
 
-		std::string face_cascade_path;
-		cv::CascadeClassifier face_cascade;
+  std_msgs::Header img_header;
+  cv::Mat img;
+  cv_bridge::CvImagePtr img_buffer_ptr;
+  cv::Mat gray;
+  boost::interprocess::interprocess_mutex mutex;
+  boost::interprocess::interprocess_mutex semaphore;
+  ros::NodeHandle n;
 
-        /*!
+  image_transport::ImageTransport it_;
+  image_transport ::Subscriber sub1;
+
+  ros::Publisher pub_center_camera;
+  ros::Publisher pub1;
+  ros::Publisher pub2;
+  ros::Subscriber sub2;
+  ros::Subscriber sub3;
+
+  cv::Point center_camera_view;
+
+  std::string face_cascade_path;
+  cv::CascadeClassifier face_cascade;
+
+  /*!
         * \brief This function return a new image has been received
         */
-		bool newImageReceived();
-		void getLastImageFromBuffer();
+  bool newImageReceived();
+  void getLastImageFromBuffer();
 
-        /*!
+  /*!
         * \brief ROS image callback.
         */
-		void imageReceivedCB(const sensor_msgs::ImageConstPtr & msg);
+  void imageReceivedCB(const sensor_msgs::ImageConstPtr & msg);
 
-        /*!
+  /*!
         * \brief ROS target callback.
         */
-		void targetReceivedCB(const tld_msgs::TargetConstPtr & msg);
+  void targetReceivedCB(const tld_msgs::TargetConstPtr & msg);
 
-        /*!
+  /*!
         * \brief ROS command callback.
         */
-		void cmdReceivedCB(const std_msgs::CharConstPtr & cmd);
+  void cmdReceivedCB(const std_msgs::CharConstPtr & cmd);
 
-        /*!
+  /*!
         * \brief This function sends the tracked object as a BoudingBox message.
         *
         * \param x
@@ -166,21 +181,22 @@ class Main
         * \param height
         * \param confidence
         */
-		void sendTrackedObject(int x, int y, int width, int height, float conf);
+  void sendTrackedObject(int x, int y, int width, int height, float conf);
 
-		void clearBackground();
-		void stopTracking();
-		void toggleLearning();
-		void alternatingMode();
-		void exportModel();
-		void importModel();
-		void reset();
+  void clearBackground();
+  void stopTracking();
+  void toggleLearning();
+  void alternatingMode();
+  void exportModel();
+  void importModel();
+  void reset();
+  void sendCenterView();
 
-        /*!
-        * \brief This function allows to automatically initialize the target 
+  /*!
+        * \brief This function allows to automatically initialize the target
         * using the OpenCV Haar-cascade detector.
         */
-		cv::Rect faceDetection();
+  cv::Rect faceDetection();
 };
 
 #endif /* MAIN_HPP_ */

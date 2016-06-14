@@ -50,7 +50,7 @@ class BaseFrameGraphicsView : public QGraphicsView
 	Q_OBJECT
 
 	public:
-		BaseFrameGraphicsView(QWidget * parent);
+        BaseFrameGraphicsView(QWidget * parent);
 		BaseFrameGraphicsView(QGraphicsScene * scene = NULL, QWidget * parent = NULL);
 		~BaseFrameGraphicsView();
 		QGraphicsRectItem * get_bb() const;
@@ -70,6 +70,7 @@ class BaseFrameGraphicsView : public QGraphicsView
 		bool drag;
 		QGraphicsPixmapItem * m_item_pixmap;
 		QGraphicsRectItem * m_item_rect;
+        QGraphicsLineItem *m_item_line;
 		QGraphicsScene * m_scene;
 		QPen * m_pen;
 		QBrush * m_brush;

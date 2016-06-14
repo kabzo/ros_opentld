@@ -47,10 +47,9 @@ BaseFrame::BaseFrame()
 	QObject::connect(importing_button,SIGNAL(clicked()),this,SLOT(import_model()));
 	QObject::connect(exporting_button,SIGNAL(clicked()),this,SLOT(export_model()));
 	QObject::connect(reset_button,SIGNAL(clicked()),this,SLOT(reset()));
-
-	sub1 = n.subscribe("image", 1000, &BaseFrame::image_receivedCB, this);
-	sub2 = n.subscribe("tracked_object", 1000, &BaseFrame::tracked_objectCB, this);
-	sub3 = n.subscribe("fps_tracker", 1000, &BaseFrame::fps_trackerCB, this);
+    sub1 = n.subscribe("image", 1000, &BaseFrame::image_receivedCB, this);
+    sub2 = n.subscribe("tld_tracked_object", 1000, &BaseFrame::tracked_objectCB, this);
+    sub3 = n.subscribe("tld_fps", 1000, &BaseFrame::fps_trackerCB, this);
 	pub1 = n.advertise<tld_msgs::Target>("tld_gui_bb", 1000, true);
 	pub2 = n.advertise<std_msgs::Char>("tld_gui_cmds", 1000, true);
 
@@ -117,6 +116,7 @@ void BaseFrame::keyPressEvent(QKeyEvent * event)
 
 void BaseFrame::image_receivedCB(const sensor_msgs::ImageConstPtr & msg)
 {
+//    qDebug() <<"firt_iage:"<<first_image<< ",correct_bb:"<<base_frame_graphics_view->get_correct_bb();
 	if(first_image || base_frame_graphics_view->get_correct_bb())
 	{
 		try
@@ -131,6 +131,8 @@ void BaseFrame::image_receivedCB(const sensor_msgs::ImageConstPtr & msg)
 			ROS_ERROR("cv_bridge exception: %s", e.what());
 			return;
 		}
+
+        cv::resize(cv_ptr->image,cv_ptr->image,cv::Size(640,480));
 
 		QImage image;
 
@@ -160,7 +162,7 @@ void BaseFrame::tracked_objectCB(const tld_msgs::BoundingBoxConstPtr & msg)
 
 	QRectF rect(msg->x,msg->y,msg->width,msg->height);
 	emit sig_tracked_object_changed(rect);
-	emit sig_confidence_changed((int)(msg->confidence*100));
+    emit sig_confidence_changed((int)(msg->confidence*100));
 }
 
 void BaseFrame::fps_trackerCB(const std_msgs::Float32ConstPtr & msg)

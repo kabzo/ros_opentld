@@ -34,6 +34,8 @@
 
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
+#include <opencv/cv.h>
+
 #include <sensor_msgs/Image.h>
 #include <tld_msgs/Target.h>
 #include <tld_msgs/BoundingBox.h>

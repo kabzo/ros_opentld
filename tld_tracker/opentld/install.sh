@@ -9,4 +9,5 @@ mkdir -p $INCPATH/tld
 cp $PWD/src/libopentld/tld/*.h $INCPATH/tld
 mkdir -p $INCPATH/mftracker
 cp $PWD/src/libopentld/mftracker/*.h $INCPATH/mftracker
+cd $PWD/src/libopentld
 
